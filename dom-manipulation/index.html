@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Quote Generator with Advanced Filtering</title>
+    <title>Dynamic Quote Generator with Server Sync</title>
     <style>
         * {
             margin: 0;
@@ -54,7 +54,7 @@
             }
         }
         
-        .quote-section, .add-quote-section, .filter-section, .storage-section {
+        .quote-section, .add-quote-section, .sync-section, .conflict-section, .filter-section {
             background-color: white;
             border-radius: 10px;
             padding: 25px;
@@ -67,6 +67,13 @@
             color: #2c3e50;
             padding-bottom: 10px;
             border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
         }
         
         #quoteDisplay {
@@ -130,27 +137,31 @@
             background-color: #27ae60;
         }
         
-        .category-filter {
-            margin-bottom: 20px;
+        .sync-btn {
+            background-color: #9b59b6;
         }
         
-        .category-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
+        .sync-btn:hover {
+            background-color: #8e44ad;
         }
         
-        .category-btn {
-            padding: 8px 16px;
-            background-color: #ecf0f1;
-            color: #34495e;
-            font-size: 0.9rem;
+        .sync-btn.syncing {
+            background-color: #f39c12;
+            animation: pulse 1.5s infinite;
         }
         
-        .category-btn.active {
-            background-color: #3498db;
-            color: white;
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .danger-btn {
+            background-color: #e74c3c;
+        }
+        
+        .danger-btn:hover {
+            background-color: #c0392b;
         }
         
         .form-group {
@@ -209,93 +220,107 @@
             margin-left: 15px;
         }
         
-        .storage-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-top: 20px;
+        .sync-status {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
         }
         
-        .storage-btn {
-            width: 100%;
-            padding: 12px;
+        .sync-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
         }
         
-        #exportJson {
+        .sync-indicator.online {
             background-color: #2ecc71;
+            box-shadow: 0 0 8px #2ecc71;
         }
         
-        #exportJson:hover {
-            background-color: #27ae60;
-        }
-        
-        #importJson {
-            background-color: #9b59b6;
-        }
-        
-        #importJson:hover {
-            background-color: #8e44ad;
-        }
-        
-        #clearStorage {
+        .sync-indicator.offline {
             background-color: #e74c3c;
         }
         
-        #clearStorage:hover {
-            background-color: #c0392b;
+        .sync-indicator.syncing {
+            background-color: #f39c12;
+            animation: pulse 1s infinite;
         }
         
-        .file-input-container {
-            position: relative;
-            margin-bottom: 15px;
-        }
-        
-        .file-input-label {
-            display: block;
-            padding: 12px;
-            background-color: #9b59b6;
-            color: white;
-            border-radius: 5px;
-            text-align: center;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        
-        .file-input-label:hover {
-            background-color: #8e44ad;
-        }
-        
-        #importFile {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            cursor: pointer;
-        }
-        
-        .last-viewed {
-            background-color: #fff9e6;
-            border-left: 5px solid #f39c12;
+        .sync-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
             margin-top: 15px;
-            padding: 15px;
-            border-radius: 5px;
-            font-size: 0.9rem;
         }
         
-        .last-viewed h4 {
-            color: #e67e22;
-            margin-bottom: 5px;
-        }
-        
-        footer {
+        .sync-stat {
             text-align: center;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-            color: #7f8c8d;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .sync-stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .sync-stat-label {
             font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+        
+        .conflict-list {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .conflict-item {
+            padding: 15px;
+            border: 1px solid #f39c12;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            background-color: #fff9e6;
+        }
+        
+        .conflict-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .conflict-title {
+            font-weight: bold;
+            color: #e67e22;
+        }
+        
+        .conflict-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .conflict-btn {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+        
+        .conflict-btn.keep-local {
+            background-color: #3498db;
+        }
+        
+        .conflict-btn.keep-server {
+            background-color: #2ecc71;
+        }
+        
+        .conflict-btn.merge {
+            background-color: #9b59b6;
         }
         
         .notification {
@@ -312,6 +337,18 @@
             animation: slideIn 0.3s ease;
         }
         
+        .notification.warning {
+            background-color: #f39c12;
+        }
+        
+        .notification.error {
+            background-color: #e74c3c;
+        }
+        
+        .notification.info {
+            background-color: #3498db;
+        }
+        
         @keyframes slideIn {
             from {
                 transform: translateX(100%);
@@ -323,149 +360,108 @@
             }
         }
         
-        .stats {
+        .sync-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .sync-control-group {
             display: flex;
             justify-content: space-between;
-            margin-top: 20px;
-            padding: 15px;
+            align-items: center;
+            padding: 10px;
             background-color: #f8f9fa;
             border-radius: 5px;
         }
         
-        .stat-item {
-            text-align: center;
-        }
-        
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #3498db;
-        }
-        
-        .stat-label {
+        .last-sync {
             font-size: 0.9rem;
             color: #7f8c8d;
+            margin-top: 10px;
         }
         
-        .filter-controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #7f8c8d;
+            font-size: 0.9rem;
         }
         
-        @media (max-width: 768px) {
-            .filter-controls {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        .filter-group {
-            margin-bottom: 15px;
-        }
-        
-        .filter-info {
+        .server-sim-controls {
             background-color: #f8f9fa;
             padding: 15px;
             border-radius: 5px;
             margin-top: 15px;
-            font-size: 0.9rem;
-            color: #666;
         }
         
-        .filtered-count {
-            background-color: #e8f4fc;
-            padding: 10px 15px;
-            border-radius: 5px;
-            margin-top: 15px;
-            display: none;
-        }
-        
-        .filtered-count.active {
-            display: block;
-        }
-        
-        .category-tag {
-            display: inline-block;
-            background-color: #e8f4fc;
-            color: #2980b9;
-            padding: 4px 12px;
-            border-radius: 20px;
-            margin: 5px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .category-tag:hover {
-            background-color: #2980b9;
-            color: white;
-        }
-        
-        .category-tag.active {
-            background-color: #2980b9;
-            color: white;
-        }
-        
-        .category-tags-container {
-            margin-top: 10px;
+        .toggle-container {
             display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: #2ecc71;
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>Dynamic Quote Generator with Advanced Filtering</h1>
-        <p class="subtitle">Filter quotes by category and save your preferences across sessions!</p>
+        <h1>Dynamic Quote Generator with Server Sync</h1>
+        <p class="subtitle">Real-time synchronization and conflict resolution simulation</p>
     </header>
     
     <div class="container">
-        <section class="filter-section">
-            <h2 class="section-title">Advanced Filtering System</h2>
-            
-            <div class="filter-controls">
-                <div class="filter-group">
-                    <label for="categoryFilter">Filter by Category</label>
-                    <select id="categoryFilter">
-                        <option value="all">All Categories</option>
-                        <!-- Categories will be dynamically populated -->
-                    </select>
-                </div>
-                
-                <div class="filter-group">
-                    <label for="sortBy">Sort Quotes</label>
-                    <select id="sortBy">
-                        <option value="dateAdded">Date Added (Newest First)</option>
-                        <option value="dateAddedOldest">Date Added (Oldest First)</option>
-                        <option value="category">Category (A-Z)</option>
-                        <option value="categoryDesc">Category (Z-A)</option>
-                        <option value="random">Random</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="filter-info">
-                <p><strong>Current Filter:</strong> <span id="currentFilterInfo">All Categories</span></p>
-                <p><strong>Filter Preference Saved:</strong> <span id="filterSavedStatus">No</span></p>
-                <button id="clearFilter" style="margin-top: 10px;">Clear Filter</button>
-            </div>
-            
-            <div class="category-tags-container" id="categoryTags">
-                <!-- Category tags will be dynamically generated here -->
-            </div>
-            
-            <div class="filtered-count" id="filteredCount">
-                Showing <span id="filteredNumber">0</span> of <span id="totalNumber">0</span> quotes
-            </div>
-        </section>
-        
         <section class="quote-section">
             <h2 class="section-title">Quote Display</h2>
             
             <div id="quoteDisplay">
-                <!-- Quote will be displayed here dynamically -->
                 <p class="quote-text">Click "Show New Quote" to get started!</p>
                 <span class="quote-category">Inspiration</span>
             </div>
@@ -475,17 +471,99 @@
                 <button id="showAllQuotes">Show All Quotes</button>
                 <button id="showFilteredQuotes">Show Filtered Quotes</button>
             </div>
+        </section>
+        
+        <section class="sync-section">
+            <div class="section-header">
+                <h2 class="section-title">Server Synchronization</h2>
+                <div class="sync-status">
+                    <span class="sync-indicator" id="syncIndicator"></span>
+                    <span id="syncStatusText">Checking connection...</span>
+                </div>
+            </div>
             
-            <!-- Last Viewed Quote (Session Storage Demo) -->
-            <div class="last-viewed" id="lastViewedSection" style="display: none;">
-                <h4>Last Viewed Quote (Session)</h4>
-                <p id="lastViewedQuote"></p>
-                <p><small>This will disappear when you close the browser tab</small></p>
+            <div class="sync-stats">
+                <div class="sync-stat">
+                    <div class="sync-stat-value" id="localQuotesCount">0</div>
+                    <div class="sync-stat-label">Local Quotes</div>
+                </div>
+                <div class="sync-stat">
+                    <div class="sync-stat-value" id="serverQuotesCount">0</div>
+                    <div class="sync-stat-label">Server Quotes</div>
+                </div>
+                <div class="sync-stat">
+                    <div class="sync-stat-value" id="syncConflictsCount">0</div>
+                    <div class="sync-stat-label">Conflicts</div>
+                </div>
+            </div>
+            
+            <div class="sync-controls">
+                <div class="sync-control-group">
+                    <span>Auto-sync interval:</span>
+                    <select id="syncInterval">
+                        <option value="10000">10 seconds</option>
+                        <option value="30000" selected>30 seconds</option>
+                        <option value="60000">1 minute</option>
+                        <option value="300000">5 minutes</option>
+                        <option value="0">Manual only</option>
+                    </select>
+                </div>
+                
+                <div class="buttons">
+                    <button id="syncNow" class="sync-btn">Sync Now</button>
+                    <button id="forceServerUpdate" class="sync-btn">Force Server Update</button>
+                    <button id="resetToServer" class="danger-btn">Reset to Server</button>
+                </div>
+                
+                <div class="last-sync">
+                    Last sync: <span id="lastSyncTime">Never</span>
+                </div>
+            </div>
+            
+            <div class="server-sim-controls">
+                <h3>Server Simulation Controls</h3>
+                <div class="toggle-container">
+                    <span>Server Connection:</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="serverToggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span id="serverStatus">Online</span>
+                </div>
+                
+                <div class="toggle-container">
+                    <span>Auto-generate server quotes:</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="autoGenerateToggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <button id="generateServerQuotes" style="margin-top: 10px;">Generate Random Server Quotes</button>
             </div>
         </section>
     </div>
     
     <div class="container">
+        <section class="conflict-section">
+            <div class="section-header">
+                <h2 class="section-title">Conflict Resolution</h2>
+                <span id="conflictCountBadge" style="background-color: #e74c3c; color: white; padding: 5px 10px; border-radius: 15px; display: none;">0 Conflicts</span>
+            </div>
+            
+            <p>Conflicts occur when the same quote is modified both locally and on the server. Resolve them manually or apply automatic resolution.</p>
+            
+            <div class="buttons" style="margin-top: 15px;">
+                <button id="resolveAllConflicts" class="danger-btn">Resolve All Conflicts (Server Wins)</button>
+                <button id="viewAllConflicts" class="sync-btn">View All Conflicts</button>
+            </div>
+            
+            <div class="conflict-list" id="conflictList">
+                <!-- Conflicts will be displayed here -->
+                <p style="text-align: center; color: #7f8c8d; padding: 20px;">No conflicts detected</p>
+            </div>
+        </section>
+        
         <section class="add-quote-section">
             <h2 class="section-title">Add a New Quote</h2>
             
@@ -498,7 +576,6 @@
                 <label for="newQuoteCategory">Quote Category</label>
                 <select id="newQuoteCategory">
                     <option value="" disabled selected>Select a category</option>
-                    <!-- Category options will be dynamically added here -->
                 </select>
             </div>
             
@@ -508,46 +585,58 @@
             </div>
             
             <button id="addQuoteBtn">Add Quote</button>
-        </section>
-        
-        <section class="storage-section">
-            <h2 class="section-title">Storage & JSON Handling</h2>
             
-            <div class="stats">
-                <div class="stat-item">
-                    <div class="stat-value" id="totalQuotes">0</div>
-                    <div class="stat-label">Total Quotes</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="totalCategories">0</div>
-                    <div class="stat-label">Categories</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="storageStatus">Local</div>
-                    <div class="stat-label">Storage Status</div>
-                </div>
-            </div>
-            
-            <div class="storage-buttons">
-                <button id="exportJson">Export Quotes as JSON</button>
-                
-                <div class="file-input-container">
-                    <label for="importFile" class="file-input-label">Import Quotes from JSON File</label>
-                    <input type="file" id="importFile" accept=".json">
-                </div>
-                
-                <button id="clearStorage">Clear All Quotes from Storage</button>
-            </div>
-            
-            <div class="form-group" style="margin-top: 20px;">
-                <label for="sessionData">Session Storage Demo (Last Quote)</label>
-                <input type="text" id="sessionData" readonly placeholder="Your last viewed quote appears here">
+            <div style="margin-top: 15px; font-size: 0.9rem; color: #666;">
+                <p><strong>Note:</strong> New quotes will be synced to the server on next sync</p>
             </div>
         </section>
     </div>
     
+    <section class="filter-section">
+        <h2 class="section-title">Filtering & Sorting</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <label for="categoryFilter">Filter by Category</label>
+                <select id="categoryFilter">
+                    <option value="all">All Categories</option>
+                </select>
+            </div>
+            <div>
+                <label for="sortBy">Sort Quotes</label>
+                <select id="sortBy">
+                    <option value="dateAdded">Date Added (Newest First)</option>
+                    <option value="dateAddedOldest">Date Added (Oldest First)</option>
+                    <option value="category">Category (A-Z)</option>
+                    <option value="categoryDesc">Category (Z-A)</option>
+                    <option value="random">Random</option>
+                    <option value="syncStatus">Sync Status</option>
+                </select>
+            </div>
+        </div>
+        
+        <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;" id="categoryTags">
+            <!-- Category tags will be dynamically generated here -->
+        </div>
+        
+        <div class="filtered-count" id="filteredCount" style="margin-top: 15px;">
+            Showing <span id="filteredNumber">0</span> of <span id="totalNumber">0</span> quotes
+        </div>
+    </section>
+    
     <section class="quote-list">
-        <h2 class="section-title">All Quotes (<span id="quoteCount">0</span>)</h2>
+        <div class="section-header">
+            <h2 class="section-title">All Quotes (<span id="quoteCount">0</span>)</h2>
+            <div style="display: flex; gap: 10px;">
+                <span style="background-color: #3498db; color: white; padding: 5px 10px; border-radius: 15px; font-size: 0.9rem;">
+                    <span class="sync-indicator online" style="margin-right: 5px;"></span>
+                    <span id="syncedCount">0</span> synced
+                </span>
+                <span style="background-color: #f39c12; color: white; padding: 5px 10px; border-radius: 15px; font-size: 0.9rem;">
+                    <span class="sync-indicator syncing" style="margin-right: 5px;"></span>
+                    <span id="pendingCount">0</span> pending
+                </span>
+            </div>
+        </div>
         <div id="quotesList">
             <!-- All quotes will be listed here -->
         </div>
@@ -558,8 +647,8 @@
     </div>
     
     <footer>
-        <p>Dynamic Quote Generator with Advanced Filtering &copy; 2023 | Web Storage & DOM Manipulation Project</p>
-        <p>Your filter preferences are saved in your browser's local storage</p>
+        <p>Dynamic Quote Generator with Server Sync &copy; 2023 | Advanced DOM Manipulation Project</p>
+        <p>Server simulation using localStorage | Conflict resolution system implemented</p>
     </footer>
 
     <script src="script.js"></script>
