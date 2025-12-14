@@ -1,3 +1,4 @@
+// Store quotes
 const quotes = [
   { text: "The best way to predict the future is to create it.", category: "Motivation" },
   { text: "Talk is cheap. Show me the code.", category: "Programming" },
@@ -9,7 +10,7 @@ const quoteDisplay = document.getElementById("quoteDisplay");
 const newQuoteBtn = document.getElementById("newQuote");
 const addQuoteBtn = document.getElementById("addQuoteBtn");
 
-// Show random quote
+// Display a random quote
 function showRandomQuote() {
   quoteDisplay.innerHTML = "";
 
@@ -26,7 +27,7 @@ function showRandomQuote() {
   quoteDisplay.appendChild(quoteCategory);
 }
 
-// Add new quote
+// Add a new quote
 function addQuote() {
   const textInput = document.getElementById("newQuoteText");
   const categoryInput = document.getElementById("newQuoteCategory");
@@ -51,5 +52,5 @@ function addQuote() {
 newQuoteBtn.addEventListener("click", showRandomQuote);
 addQuoteBtn.addEventListener("click", addQuote);
 
-// Initial quote
+// Show first quote on load
 showRandomQuote();
