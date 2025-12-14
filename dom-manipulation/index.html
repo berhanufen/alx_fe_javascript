@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Quote Generator with Storage</title>
+    <title>Dynamic Quote Generator with Advanced Filtering</title>
     <style>
         * {
             margin: 0;
@@ -54,7 +54,7 @@
             }
         }
         
-        .quote-section, .add-quote-section, .storage-section {
+        .quote-section, .add-quote-section, .filter-section, .storage-section {
             background-color: white;
             border-radius: 10px;
             padding: 25px;
@@ -346,24 +346,123 @@
             font-size: 0.9rem;
             color: #7f8c8d;
         }
+        
+        .filter-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .filter-controls {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .filter-group {
+            margin-bottom: 15px;
+        }
+        
+        .filter-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .filtered-count {
+            background-color: #e8f4fc;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .filtered-count.active {
+            display: block;
+        }
+        
+        .category-tag {
+            display: inline-block;
+            background-color: #e8f4fc;
+            color: #2980b9;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .category-tag:hover {
+            background-color: #2980b9;
+            color: white;
+        }
+        
+        .category-tag.active {
+            background-color: #2980b9;
+            color: white;
+        }
+        
+        .category-tags-container {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>Dynamic Quote Generator with Storage</h1>
-        <p class="subtitle">Your quotes are now saved locally! Import and export in JSON format.</p>
+        <h1>Dynamic Quote Generator with Advanced Filtering</h1>
+        <p class="subtitle">Filter quotes by category and save your preferences across sessions!</p>
     </header>
     
     <div class="container">
-        <section class="quote-section">
-            <h2 class="section-title">Quote Display</h2>
+        <section class="filter-section">
+            <h2 class="section-title">Advanced Filtering System</h2>
             
-            <div class="category-filter">
-                <h3>Filter by Category</h3>
-                <div class="category-buttons" id="categoryButtons">
-                    <!-- Category buttons will be dynamically generated here -->
+            <div class="filter-controls">
+                <div class="filter-group">
+                    <label for="categoryFilter">Filter by Category</label>
+                    <select id="categoryFilter">
+                        <option value="all">All Categories</option>
+                        <!-- Categories will be dynamically populated -->
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="sortBy">Sort Quotes</label>
+                    <select id="sortBy">
+                        <option value="dateAdded">Date Added (Newest First)</option>
+                        <option value="dateAddedOldest">Date Added (Oldest First)</option>
+                        <option value="category">Category (A-Z)</option>
+                        <option value="categoryDesc">Category (Z-A)</option>
+                        <option value="random">Random</option>
+                    </select>
                 </div>
             </div>
+            
+            <div class="filter-info">
+                <p><strong>Current Filter:</strong> <span id="currentFilterInfo">All Categories</span></p>
+                <p><strong>Filter Preference Saved:</strong> <span id="filterSavedStatus">No</span></p>
+                <button id="clearFilter" style="margin-top: 10px;">Clear Filter</button>
+            </div>
+            
+            <div class="category-tags-container" id="categoryTags">
+                <!-- Category tags will be dynamically generated here -->
+            </div>
+            
+            <div class="filtered-count" id="filteredCount">
+                Showing <span id="filteredNumber">0</span> of <span id="totalNumber">0</span> quotes
+            </div>
+        </section>
+        
+        <section class="quote-section">
+            <h2 class="section-title">Quote Display</h2>
             
             <div id="quoteDisplay">
                 <!-- Quote will be displayed here dynamically -->
@@ -374,6 +473,7 @@
             <div class="buttons">
                 <button id="newQuote">Show New Quote</button>
                 <button id="showAllQuotes">Show All Quotes</button>
+                <button id="showFilteredQuotes">Show Filtered Quotes</button>
             </div>
             
             <!-- Last Viewed Quote (Session Storage Demo) -->
@@ -383,7 +483,9 @@
                 <p><small>This will disappear when you close the browser tab</small></p>
             </div>
         </section>
-        
+    </div>
+    
+    <div class="container">
         <section class="add-quote-section">
             <h2 class="section-title">Add a New Quote</h2>
             
@@ -407,9 +509,7 @@
             
             <button id="addQuoteBtn">Add Quote</button>
         </section>
-    </div>
-    
-    <div class="container">
+        
         <section class="storage-section">
             <h2 class="section-title">Storage & JSON Handling</h2>
             
@@ -458,8 +558,8 @@
     </div>
     
     <footer>
-        <p>Dynamic Quote Generator with Web Storage &copy; 2023 | Advanced DOM Manipulation Project</p>
-        <p>All quotes are stored in your browser's local storage</p>
+        <p>Dynamic Quote Generator with Advanced Filtering &copy; 2023 | Web Storage & DOM Manipulation Project</p>
+        <p>Your filter preferences are saved in your browser's local storage</p>
     </footer>
 
     <script src="script.js"></script>
