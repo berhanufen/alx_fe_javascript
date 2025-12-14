@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Quote Generator</title>
+    <title>Dynamic Quote Generator with Storage</title>
     <style>
         * {
             margin: 0;
@@ -54,7 +54,7 @@
             }
         }
         
-        .quote-section, .add-quote-section {
+        .quote-section, .add-quote-section, .storage-section {
             background-color: white;
             border-radius: 10px;
             padding: 25px;
@@ -209,6 +209,86 @@
             margin-left: 15px;
         }
         
+        .storage-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .storage-btn {
+            width: 100%;
+            padding: 12px;
+        }
+        
+        #exportJson {
+            background-color: #2ecc71;
+        }
+        
+        #exportJson:hover {
+            background-color: #27ae60;
+        }
+        
+        #importJson {
+            background-color: #9b59b6;
+        }
+        
+        #importJson:hover {
+            background-color: #8e44ad;
+        }
+        
+        #clearStorage {
+            background-color: #e74c3c;
+        }
+        
+        #clearStorage:hover {
+            background-color: #c0392b;
+        }
+        
+        .file-input-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        
+        .file-input-label {
+            display: block;
+            padding: 12px;
+            background-color: #9b59b6;
+            color: white;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .file-input-label:hover {
+            background-color: #8e44ad;
+        }
+        
+        #importFile {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .last-viewed {
+            background-color: #fff9e6;
+            border-left: 5px solid #f39c12;
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .last-viewed h4 {
+            color: #e67e22;
+            margin-bottom: 5px;
+        }
+        
         footer {
             text-align: center;
             margin-top: 40px;
@@ -217,12 +297,61 @@
             color: #7f8c8d;
             font-size: 0.9rem;
         }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background-color: #2ecc71;
+            color: white;
+            border-radius: 5px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>Dynamic Quote Generator</h1>
-        <p class="subtitle">Get inspired with timeless quotes. Add your own favorites!</p>
+        <h1>Dynamic Quote Generator with Storage</h1>
+        <p class="subtitle">Your quotes are now saved locally! Import and export in JSON format.</p>
     </header>
     
     <div class="container">
@@ -245,6 +374,13 @@
             <div class="buttons">
                 <button id="newQuote">Show New Quote</button>
                 <button id="showAllQuotes">Show All Quotes</button>
+            </div>
+            
+            <!-- Last Viewed Quote (Session Storage Demo) -->
+            <div class="last-viewed" id="lastViewedSection" style="display: none;">
+                <h4>Last Viewed Quote (Session)</h4>
+                <p id="lastViewedQuote"></p>
+                <p><small>This will disappear when you close the browser tab</small></p>
             </div>
         </section>
         
@@ -273,6 +409,43 @@
         </section>
     </div>
     
+    <div class="container">
+        <section class="storage-section">
+            <h2 class="section-title">Storage & JSON Handling</h2>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalQuotes">0</div>
+                    <div class="stat-label">Total Quotes</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalCategories">0</div>
+                    <div class="stat-label">Categories</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="storageStatus">Local</div>
+                    <div class="stat-label">Storage Status</div>
+                </div>
+            </div>
+            
+            <div class="storage-buttons">
+                <button id="exportJson">Export Quotes as JSON</button>
+                
+                <div class="file-input-container">
+                    <label for="importFile" class="file-input-label">Import Quotes from JSON File</label>
+                    <input type="file" id="importFile" accept=".json">
+                </div>
+                
+                <button id="clearStorage">Clear All Quotes from Storage</button>
+            </div>
+            
+            <div class="form-group" style="margin-top: 20px;">
+                <label for="sessionData">Session Storage Demo (Last Quote)</label>
+                <input type="text" id="sessionData" readonly placeholder="Your last viewed quote appears here">
+            </div>
+        </section>
+    </div>
+    
     <section class="quote-list">
         <h2 class="section-title">All Quotes (<span id="quoteCount">0</span>)</h2>
         <div id="quotesList">
@@ -280,9 +453,13 @@
         </div>
     </section>
     
+    <div class="notification" id="notification">
+        Operation completed successfully!
+    </div>
+    
     <footer>
-        <p>Dynamic Quote Generator &copy; 2023 | Advanced DOM Manipulation Project</p>
-        <p>All quotes are stored locally in your browser</p>
+        <p>Dynamic Quote Generator with Web Storage &copy; 2023 | Advanced DOM Manipulation Project</p>
+        <p>All quotes are stored in your browser's local storage</p>
     </footer>
 
     <script src="script.js"></script>
