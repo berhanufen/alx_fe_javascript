@@ -1,24 +1,290 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dynamic Quote Generator</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Quote Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            border-radius: 10px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .quote-section, .add-quote-section {
+            background-color: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        #quoteDisplay {
+            min-height: 200px;
+            padding: 25px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 5px solid #3498db;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .quote-text {
+            font-size: 1.4rem;
+            font-style: italic;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .quote-category {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            background-color: #3498db;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        #newQuote {
+            background-color: #2ecc71;
+        }
+        
+        #newQuote:hover {
+            background-color: #27ae60;
+        }
+        
+        .category-filter {
+            margin-bottom: 20px;
+        }
+        
+        .category-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .category-btn {
+            padding: 8px 16px;
+            background-color: #ecf0f1;
+            color: #34495e;
+            font-size: 0.9rem;
+        }
+        
+        .category-btn.active {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+        
+        .quote-list {
+            margin-top: 30px;
+            background-color: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .quote-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .quote-item:last-child {
+            border-bottom: none;
+        }
+        
+        .quote-item-text {
+            flex-grow: 1;
+        }
+        
+        .quote-item-category {
+            background-color: #ecf0f1;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            margin-left: 15px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
 <body>
+    <header>
+        <h1>Dynamic Quote Generator</h1>
+        <p class="subtitle">Get inspired with timeless quotes. Add your own favorites!</p>
+    </header>
+    
+    <div class="container">
+        <section class="quote-section">
+            <h2 class="section-title">Quote Display</h2>
+            
+            <div class="category-filter">
+                <h3>Filter by Category</h3>
+                <div class="category-buttons" id="categoryButtons">
+                    <!-- Category buttons will be dynamically generated here -->
+                </div>
+            </div>
+            
+            <div id="quoteDisplay">
+                <!-- Quote will be displayed here dynamically -->
+                <p class="quote-text">Click "Show New Quote" to get started!</p>
+                <span class="quote-category">Inspiration</span>
+            </div>
+            
+            <div class="buttons">
+                <button id="newQuote">Show New Quote</button>
+                <button id="showAllQuotes">Show All Quotes</button>
+            </div>
+        </section>
+        
+        <section class="add-quote-section">
+            <h2 class="section-title">Add a New Quote</h2>
+            
+            <div class="form-group">
+                <label for="newQuoteText">Quote Text</label>
+                <textarea id="newQuoteText" placeholder="Enter a new quote"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="newQuoteCategory">Quote Category</label>
+                <select id="newQuoteCategory">
+                    <option value="" disabled selected>Select a category</option>
+                    <!-- Category options will be dynamically added here -->
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="newCategory">Or Create New Category</label>
+                <input id="newCategory" type="text" placeholder="Enter new category name">
+            </div>
+            
+            <button id="addQuoteBtn">Add Quote</button>
+        </section>
+    </div>
+    
+    <section class="quote-list">
+        <h2 class="section-title">All Quotes (<span id="quoteCount">0</span>)</h2>
+        <div id="quotesList">
+            <!-- All quotes will be listed here -->
+        </div>
+    </section>
+    
+    <footer>
+        <p>Dynamic Quote Generator &copy; 2023 | Advanced DOM Manipulation Project</p>
+        <p>All quotes are stored locally in your browser</p>
+    </footer>
 
-  <h1>Dynamic Quote Generator</h1>
-
-  <div id="quoteDisplay"></div>
-
-  <button id="newQuote">Show New Quote</button>
-
-  <div>
-    <input id="newQuoteText" type="text" placeholder="Enter a new quote" />
-    <input id="newQuoteCategory" type="text" placeholder="Enter quote category" />
-    <button onclick="addQuote()">Add Quote</button>
-  </div>
-
-  <script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
