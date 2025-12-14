@@ -1,4 +1,3 @@
-// Quotes array with text and category properties
 const quotes = [
   { text: "The best way to predict the future is to create it.", category: "Motivation" },
   { text: "Talk is cheap. Show me the code.", category: "Programming" },
@@ -23,12 +22,12 @@ function displayRandomQuote() {
   quoteDisplay.appendChild(quoteCategory);
 }
 
-// Alias required by instructions
+// Required alias for ALX
 function showRandomQuote() {
   displayRandomQuote();
 }
 
-// Add a new quote and update the DOM
+// Add a new quote to the array and update DOM
 function addQuote() {
   const textInput = document.getElementById("newQuoteText");
   const categoryInput = document.getElementById("newQuoteCategory");
@@ -49,8 +48,9 @@ function addQuote() {
   displayRandomQuote();
 }
 
-// Event listener for “Show New Quote” button
-document.getElementById("newQuote").addEventListener("click", displayRandomQuote);
+// Event listeners for buttons
+document.getElementById("newQuote").addEventListener("click", showRandomQuote);
+document.getElementById("addQuoteBtn").addEventListener("click", addQuote);
 
-// Initial quote display
+// Show initial quote on page load
 displayRandomQuote();
